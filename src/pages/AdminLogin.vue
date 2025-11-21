@@ -18,17 +18,22 @@ export default {
   methods: {
     async login() {
       this.error = ''
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: this.password })
-      })
-      const data = await res.json()
-      if (res.ok && data.token) {
-        sessionStorage.setItem('admin_token', data.token)
-        this.$router.push('/admin/dashboard')
-      } else {
-        this.error = data.error || '登录失败'
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: this.password })
+        })
+        let data = {}
+        try { data = await res.json() } catch { data = {} }
+        if (res.ok && data.token) {
+          sessionStorage.setItem('admin_token', data.token)
+          this.$router.push('/admin/dashboard')
+        } else {
+          this.error = data.error || `登录失败（${res.status}）`
+        }
+      } catch (e) {
+        this.error = '无法连接服务器，请确认后端 API 已启动'
       }
     }
   }

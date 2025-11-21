@@ -3,6 +3,7 @@
     <div class="tabs">
       <button :class="['tab', currentTab==='projects'?'active':'']" @click="currentTab='projects'">项目管理</button>
       <button :class="['tab', currentTab==='docs'?'active':'']" @click="currentTab='docs'">文档管理</button>
+      <button :class="['tab', currentTab==='templates'?'active':'']" @click="currentTab='templates'">模板管理</button>
     </div>
 
     <div v-if="currentTab==='projects'">
@@ -13,41 +14,19 @@
 
       <div class="grid">
         <div v-for="p in filteredProjects" :key="p.id" class="card project-card">
-          <div class="row">
-            <div class="col"><b>{{ p.name }}</b></div>
-            <div class="col">访问码：{{ p.access_code }}</div>
-            <div class="col right"><router-link class="btn secondary" :to="'/project/' + p.id">用户视图</router-link></div>
+          <div class="card-head">
+            <div class="title">{{ p.name }}</div>
+            <div class="meta">小区：{{ p.community_name || '-' }}</div>
           </div>
-          <div class="row" style="margin-top:12px">
-            <div class="col">
-              <h4>添加阶段</h4>
-              <label>阶段名称</label>
-              <input class="input" v-model="stageForm.name" />
-              <label>序号</label>
-              <input class="input" v-model.number="stageForm.order" type="number" />
-              <label>注意事项</label>
-              <input class="input" v-model="stageForm.notes" />
-              <label>付款金额</label>
-              <input class="input" v-model.number="stageForm.payment_amount" type="number" />
-              <div style="margin-top:8px"><button class="btn" @click="addStage(p.id)">添加阶段</button></div>
-            </div>
-            <div class="col">
-              <h4>添加任务</h4>
-              <label>所属阶段ID</label>
-              <input class="input" v-model.number="taskForm.stage_id" type="number" />
-              <label>任务标题</label>
-              <input class="input" v-model="taskForm.title" />
-              <label>类型</label>
-              <select class="input" v-model="taskForm.type">
-                <option value="purchase">采购</option>
-                <option value="todo">待办</option>
-              </select>
-              <label>描述</label>
-              <input class="input" v-model="taskForm.description" />
-              <label>截止日期</label>
-              <input class="input" v-model="taskForm.due_date" type="date" />
-              <div style="margin-top:8px"><button class="btn" @click="addTask(p.id)">添加任务</button></div>
-            </div>
+          <div class="card-body">
+            <div>业主：{{ p.owner_name || '-' }}（{{ p.owner_phone || '-' }}）</div>
+            <div>状态：{{ p.status || 'PLANNING' }}</div>
+            <div>计划：{{ p.planned_start_date || '-' }} ~ {{ p.planned_end_date || '-' }}</div>
+            <div>访问码：{{ p.access_code || '-' }}</div>
+          </div>
+          <div class="card-actions">
+            <router-link class="btn" :to="'/admin/project/' + p.id">项目管理</router-link>
+            <router-link class="btn secondary" :to="'/project/' + p.id">客户视图</router-link>
           </div>
         </div>
       </div>
@@ -59,6 +38,8 @@
           <input class="input" v-model="newProject.name" placeholder="如：天府新区三居室" />
           <label>业主姓名</label>
           <input class="input" v-model="newProject.owner_name" />
+          <label>联系电话</label>
+          <input class="input" v-model="newProject.owner_phone" />
           <label>访问码</label>
           <input class="input" v-model="newProject.access_code" placeholder="供业主查看项目" />
           <div class="modal-actions">
@@ -69,7 +50,7 @@
       </div>
     </div>
 
-    <div v-else>
+    <div v-else-if="currentTab==='docs'">
       <div class="card">
         <h3>公共文档</h3>
         <label>标题</label>
@@ -87,15 +68,21 @@
         </div>
       </div>
     </div>
+    <div v-else>
+      <AdminTemplateManager />
+    </div>
   </div>
 </template>
 
 <script>
+import AdminTemplateManager from './AdminTemplateManager.vue'
+
 export default {
+  components: { AdminTemplateManager },
   data() {
     return {
       projects: [],
-      newProject: { name: '', owner_name: '', access_code: '' },
+      newProject: { name: '', owner_name: '', owner_phone: '', access_code: '' },
       stageForm: { name: '', order: 1, notes: '', payment_amount: 0 },
       taskForm: { stage_id: null, title: '', type: 'purchase', description: '', due_date: '' },
       docs: [],
@@ -132,13 +119,13 @@ export default {
         body: JSON.stringify(this.newProject)
       })
       if (res.ok) {
-        this.newProject = { name: '', owner_name: '', access_code: '' }
+        this.newProject = { name: '', owner_name: '', owner_phone: '', access_code: '' }
         await this.loadProjects()
         this.showCreateModal = false
       }
     },
     cancelCreate() {
-      this.newProject = { name: '', owner_name: '', access_code: '' }
+      this.newProject = { name: '', owner_name: '', owner_phone: '', access_code: '' }
       this.showCreateModal = false
     },
     async addStage(projectId) {
@@ -187,6 +174,11 @@ export default {
 .toolbar .search { max-width: 320px }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px }
 .project-card { min-height: 120px }
+.card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px }
+.card-head .title { font-weight: 600; font-size: 16px }
+.card-head .meta { color: #666 }
+.card-body { display: grid; grid-template-columns: 1fr; gap: 4px; margin-bottom: 8px }
+.card-actions { display: flex; gap: 8px; justify-content: flex-end }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center }
 .modal-body { width: 520px; background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15) }
 .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end }

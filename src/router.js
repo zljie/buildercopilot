@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminLogin from './pages/AdminLogin.vue'
 import AdminDashboard from './pages/AdminDashboard.vue'
+import AdminProjectDetail from './pages/AdminProjectDetail.vue'
 import ProjectView from './pages/ProjectView.vue'
 import PublicDocs from './pages/PublicDocs.vue'
 
@@ -10,6 +11,7 @@ const routes = [
   { path: '/', component: Home },
   { path: '/admin', component: AdminLogin },
   { path: '/admin/dashboard', component: AdminDashboard },
+  { path: '/admin/project/:id', component: AdminProjectDetail },
   { path: '/project/:id', component: ProjectView },
   { path: '/docs', component: PublicDocs }
 ]
